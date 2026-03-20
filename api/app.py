@@ -1,10 +1,22 @@
 import mlflow
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException
 import pandas as pd
 from pydantic import BaseModel
 
-app = FastAPI()
-model = mlflow.sklearn.load_model("models:/churn-model/Production")
+model = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global model
+    try:
+        model = mlflow.sklearn.load_model("models:/churn-model/Production")
+    except Exception as e:
+        print(f"WARNING: Could not load model on startup: {e}")
+        print("The /predict endpoint will return 503 until the model is available.")
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 class CustomerData(BaseModel):
     gender: bool
@@ -50,6 +62,8 @@ class CustomerData(BaseModel):
 
 @app.post("/predict")
 def predict(data: CustomerData):
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded. Check that MLflow is running and a Production model is registered.")
     df = pd.DataFrame([data.model_dump()])
     prediction = model.predict(df)
     probability = model.predict_proba(df)[:, 1]

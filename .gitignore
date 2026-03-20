@@ -10,3 +10,4 @@ mlflow.db
 
 # Generated data
 data/preprocessed.csv
+data/raw.csv

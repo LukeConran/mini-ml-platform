@@ -1,9 +1,12 @@
 import argparse
+from pathlib import Path
 
 import kagglehub
 import pandas as pd
 
-PREPROCESSED_PATH = "data/preprocessed.csv"
+ROOT = Path(__file__).parent.parent
+PREPROCESSED_PATH = str(ROOT / "data" / "preprocessed.csv")
+RAW_PATH = str(ROOT / "data" / "raw.csv")
 
 BINARY_COLS = ["Partner", "Dependents", "PhoneService", "PaperlessBilling", "Churn"]
 ONEHOT_COLS = [
@@ -37,6 +40,8 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
 def main():
     path = kagglehub.dataset_download("blastchar/telco-customer-churn")
     df = pd.read_csv(path + "/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+    df.to_csv(RAW_PATH, index=False)
+    print(f"Saved raw dataset to {RAW_PATH}")
     preprocess(df).to_csv(PREPROCESSED_PATH, index=False)
     print(f"Saved preprocessed dataset to {PREPROCESSED_PATH}")
 

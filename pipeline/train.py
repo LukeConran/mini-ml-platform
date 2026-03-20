@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 import mlflow
 import mlflow.sklearn
@@ -12,8 +14,10 @@ RANDOM_STATE = 42
 mlflow.set_experiment("churn-prediction")
 
 
+ROOT = Path(__file__).parent.parent
+
 def load_data():
-    df = pd.read_csv("data/preprocessed.csv")
+    df = pd.read_csv(ROOT / "data" / "preprocessed.csv")
     y = df["Churn"]
     X = df.drop(columns=["Churn"])
     return train_test_split(X, y, test_size=0.2, random_state=RANDOM_STATE)
