@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.vscode/
+
+# MLflow (auto-generated)
+mlruns/
+mlflow.db
+
+# Generated data
+data/preprocessed.csv
