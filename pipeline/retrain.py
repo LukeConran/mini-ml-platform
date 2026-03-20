@@ -1,7 +1,11 @@
 import argparse
+from pathlib import Path
 
 import mlflow
 from mlflow.tracking import MlflowClient
+
+ROOT = Path(__file__).parent.parent
+mlflow.set_tracking_uri(f"sqlite:///{ROOT}/mlflow.db")
 import pandas as pd
 from imblearn.over_sampling import SMOTE
 
@@ -15,9 +19,9 @@ MODEL_NAME = "churn-model"
 def get_production_recall():
     client = MlflowClient()
     try:
-        prod = client.get_latest_versions(MODEL_NAME, stages=["Production"])[0]
-        return client.get_run(prod.run_id).data.metrics.get("recall_churn", 0.0)
-    except IndexError:
+        mv = client.get_model_version_by_alias(MODEL_NAME, "production")
+        return client.get_run(mv.run_id).data.metrics.get("recall_churn", 0.0)
+    except Exception:
         return 0.0  # no production model yet
 
 
@@ -65,8 +69,8 @@ def main():
     if new_recall > prod_recall:
         print("New model is better — promoting to Production.")
         mv = mlflow.register_model(f"runs:/{best_run.info.run_id}/model", MODEL_NAME)
-        client.transition_model_version_stage(MODEL_NAME, mv.version, stage="Production")
-        print(f"Registered {MODEL_NAME} v{mv.version} as Production.")
+        client.set_registered_model_alias(MODEL_NAME, "production", mv.version)
+        print(f"Registered {MODEL_NAME} v{mv.version} as @production.")
     else:
         print("Existing production model is still the best. No update made.")
 

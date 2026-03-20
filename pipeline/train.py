@@ -11,6 +11,8 @@ from lightgbm import LGBMClassifier
 from imblearn.over_sampling import SMOTE
 
 RANDOM_STATE = 42
+ROOT = Path(__file__).parent.parent
+mlflow.set_tracking_uri(f"sqlite:///{ROOT}/mlflow.db")
 mlflow.set_experiment("churn-prediction")
 
 
